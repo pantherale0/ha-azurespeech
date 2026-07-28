@@ -1,0 +1,21 @@
+<speak version='1.0' xml:lang='en-US' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='http://www.w3.org/2001/mstts'>
+  <voice name='en-US-AvaMultilingualNeural'>
+    <mstts:express-as style='cheerful'>
+      Good morning! Welcome home. All security systems are armed and operational.
+    </mstts:express-as>
+    <break time='1s'/>
+    <prosody rate='0.95' pitch='+10%'>
+      The outdoor temperature is currently 22 degrees Celsius with clear skies.
+    </prosody>
+    <break time='500ms'/>
+    <mstts:express-as style='whispering'>
+      Remember to lock the front door tonight.
+    </mstts:express-as>
+  </voice>
+  <voice name='en-GB-SoniaNeural'>
+    <break time='1s'/>
+    <mstts:express-as style='news_casual'>
+      Here is your daily Home Assistant briefing.
+    </mstts:express-as>
+  </voice>
+</speak>
