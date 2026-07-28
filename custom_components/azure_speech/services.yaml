@@ -1,0 +1,3 @@
+refresh_voices:
+  name: Refresh Azure Voices
+  description: Forces an immediate refresh of cached neural voices from Microsoft Azure Speech API.

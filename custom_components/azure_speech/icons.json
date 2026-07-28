@@ -1,0 +1,7 @@
+{
+  "services": {
+    "refresh_voices": {
+      "service": "mdi:refresh"
+    }
+  }
+}

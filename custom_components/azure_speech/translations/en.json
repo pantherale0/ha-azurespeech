@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Azure Speech",
+        "description": "Enter your Azure Speech API key and subscription region.",
+        "data": {
+          "api_key": "API Key",
+          "region": "Azure Region",
+          "endpoint": "Custom Endpoint URL (Optional)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Azure Speech",
+        "description": "The API key for {name} is invalid or expired. Enter a valid API key.",
+        "data": {
+          "api_key": "API Key",
+          "region": "Azure Region",
+          "endpoint": "Custom Endpoint URL (Optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Azure Speech",
+        "description": "Update the API key, region, or custom endpoint URL.",
+        "data": {
+          "api_key": "API Key",
+          "region": "Azure Region",
+          "endpoint": "Custom Endpoint URL (Optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Azure Speech API. Verify network connection and region.",
+      "invalid_auth": "Invalid API key or region credentials.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "Azure Speech is already configured for this region or endpoint.",
+      "reauth_successful": "Re-authentication was successful."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Azure Speech Settings",
+        "description": "Configure default Text-to-Speech voice, language, pitch, rate, audio encoding, and profanity filtering.",
+        "data": {
+          "voice": "Default Voice",
+          "language": "Default Language",
+          "pitch": "Speaking Pitch",
+          "rate": "Speaking Rate",
+          "audio_format": "Audio Format",
+          "profanity_mode": "Profanity Filter Mode"
+        }
+      }
+    }
+  },
+  "services": {
+    "refresh_voices": {
+      "name": "Refresh Azure Voices",
+      "description": "Forces an immediate refresh of cached neural voices from Microsoft Azure Speech API."
+    }
+  }
+}

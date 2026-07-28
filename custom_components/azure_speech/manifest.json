@@ -1,0 +1,14 @@
+{
+  "domain": "azure_speech",
+  "name": "Azure Speech",
+  "codeowners": [
+    "@pantherale0"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/pantherale0/ha-azurespeech",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/pantherale0/ha-azurespeech/issues",
+  "quality_scale": "silver",
+  "version": "0.1.0"
+}

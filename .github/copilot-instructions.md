@@ -6,10 +6,10 @@
 
 ## Project Identity
 
-- **Domain:** `ha_integration_domain`
-- **Title:** Integration Blueprint
-- **Class prefix:** `IntegrationBlueprint`
-- **Main code:** `custom_components/ha_integration_domain/`
+- **Domain:** `azure_speech`
+- **Title:** Azure Speech
+- **Class prefix:** `AzureSpeech`
+- **Main code:** `custom_components/azure_speech/`
 - **Validate:** `script/check` (type-check + lint-check + spell-check)
 - **Start HA:** `./script/develop` (kills existing, starts on port 8123)
 - **Force restart:** `pkill -f "hass --config" || true && pkill -f "debugpy.*5678" || true && ./script/develop`

@@ -1,137 +1,73 @@
-# Architectural and Design Decisions
+# Architectural and Design Decisions - Azure Speech
 
-This document records significant architectural and design decisions made during the development of this integration.
-
-## Format
-
-Each decision is documented with:
-
-- **Date:** When the decision was made
-- **Context:** Why this decision was necessary
-- **Decision:** What was decided
-- **Rationale:** Why this approach was chosen
-- **Consequences:** Expected impacts and trade-offs
+This document records significant architectural and design decisions made during the development of the Azure Speech integration.
 
 ---
 
 ## Decision Log
 
-### Use DataUpdateCoordinator for All Data Fetching
+### 1. Pure Async `aiohttp` REST Client Over Native Azure Speech C-SDK
 
-**Date:** 2025-11-29 (Template initialization)
+**Date:** 2026-07-28
 
-**Context:** The integration needs to fetch data from an external API and share it with multiple entities. Home Assistant provides several patterns for this.
+**Context:** Azure Speech provides both an official Python SDK (`azure-cognitiveservices-speech`) and standard REST/WebSocket HTTP endpoints.
 
-**Decision:** Use `DataUpdateCoordinator` from `homeassistant.helpers.update_coordinator` as the central data management component.
-
-**Rationale:**
-
-- Provides built-in support for update intervals and error handling
-- Automatic retry with exponential backoff
-- Shared data access prevents duplicate API calls
-- Standard pattern recommended by Home Assistant
-- Entities automatically become unavailable when coordinator fails
-
-**Consequences:**
-
-- All entities must inherit from `CoordinatorEntity`
-- Single update interval applies to all entities
-- Data is fetched even if no entities are enabled
-- Coordinator manages entity lifecycle and availability
-
----
-
-### Separate API Client from Coordinator
-
-**Date:** 2025-11-29 (Template initialization)
-
-**Context:** The coordinator needs to fetch data, but business logic should be separated from data transport.
-
-**Decision:** Implement API communication in separate `api/client.py` module, coordinator only orchestrates updates.
+**Decision:** Implement a lightweight, pure-Python async API client (`AzureSpeechApiClient`) using Home Assistant's shared `aiohttp.ClientSession` rather than including the C-extension binary SDK.
 
 **Rationale:**
 
-- Separation of concerns: transport vs. orchestration
-- Easier to test API client in isolation
-- Simpler to swap API implementation if needed
-- Clearer error handling boundaries
+- **Zero Binary Dependencies:** Native C-extensions can fail to compile or wheel-install on custom Linux architectures (e.g. ARM, Alpine, Docker containers).
+- **Home Assistant Event Loop Safety:** `aiohttp` is natively non-blocking and integrates cleanly with Home Assistant's asyncio event loop.
+- **Lower Footprint:** Eliminates heavy C++ shared libraries from the integration dependencies.
 
 **Consequences:**
 
-- Additional abstraction layer
-- Coordinator depends on API client
-- API client raises custom exceptions for error translation
+- REST short audio endpoint (WAV PCM 16kHz mono) is used for STT.
+- Lightweight and instantly compatible across all Home Assistant OS / Supervised / Container environments.
 
 ---
 
-### Platform-Specific Directories
+### 2. W3C SSML Generation Engine for Text-To-Speech
 
-**Date:** 2025-11-29 (Template initialization)
+**Date:** 2026-07-28
 
-**Context:** Integration supports multiple platforms (sensor, binary_sensor, switch, etc.).
+**Context:** Azure TTS REST API accepts raw text or structured SSML (Speech Synthesis Markup Language).
 
-**Decision:** Each platform gets its own directory with individual entity files.
+**Decision:** Implement a dedicated SSML generator (`entity_utils/ssml.py`) that wraps plain text or accepts pre-formatted SSML documents.
 
 **Rationale:**
 
-- Clear organization as integration grows
-- Easier to find specific entity implementations
-- Supports multiple entities per platform cleanly
-- Follows Home Assistant Core pattern
-
-**Consequences:**
-
-- More files/directories than single-file approach
-- Platform `__init__.py` must import and register entities
-- Slightly more initial setup overhead
+- Enables rich speech controls (voice overrides, pitch adjustment, speaking rate, styles).
+- Automatically escapes special XML characters (`&`, `<`, `>`).
+- Full backward compatibility with plain text strings.
 
 ---
 
-### EntityDescription for Static Metadata
+### 3. Dynamic Neural Voice Discovery and Caching
 
-**Date:** 2025-11-29 (Template initialization)
+**Date:** 2026-07-28
 
-**Context:** Entities have static metadata (name, icon, device class) that doesn't change.
+**Context:** Azure Speech offers over 500 neural voices across 100+ languages and locales.
 
-**Decision:** Use `EntityDescription` dataclasses to define static entity metadata.
+**Decision:** Cache voices via `AzureSpeechDataUpdateCoordinator` and populate them dynamically in UI Options Flow dropdowns and diagnostic sensor attributes.
 
 **Rationale:**
 
-- Declarative and easy to read
-- Type-safe with dataclasses
-- Recommended Home Assistant pattern
-- Separates static configuration from dynamic behavior
-
-**Consequences:**
-
-- Each entity type needs an EntityDescription
-- Dynamic entities need custom handling
-- Static and dynamic properties clearly separated
+- Gives users full UI access to all regional neural voices without requiring manual string typing.
+- Caches voice lists periodically (every 12 hours) to avoid hitting Azure API rate limits.
+- Supports manual cache invalidation via the `azure_speech.refresh_voices` service action.
 
 ---
 
-## Future Considerations
+### 4. Separate TTS and STT Platforms
 
-### State Restoration
+**Date:** 2026-07-28
 
-**Status:** Not yet implemented
+**Context:** Home Assistant Voice Assistant (Assist) requires Speech-to-Text (`stt`) and Text-to-Speech (`tts`) entity platforms.
 
-Consider implementing state restoration for switches and configurable settings to maintain state across Home Assistant restarts when the external device is unavailable.
+**Decision:** Implement both `tts` and `stt` entity platforms under `custom_components/azure_speech/`.
 
-### Multi-Device Support
+**Rationale:**
 
-**Status:** Not yet implemented
-
-Current architecture assumes single device per config entry. If multi-device support is needed, coordinator data structure will need redesign to map device ID → data.
-
-### Polling vs. Push
-
-**Status:** Uses polling
-
-Currently implements polling-based updates. If the API supports webhooks or WebSocket, consider implementing push-based updates for real-time responsiveness.
-
----
-
-## Decision Review
-
-These decisions should be reviewed periodically (suggested: quarterly or when major features are added) to ensure they still serve the integration's needs.
+- Allows Azure Speech to serve as a complete engine for Home Assistant voice pipelines.
+- Supports custom automations using standard HA `tts.speak` and media player targets.
