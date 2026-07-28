@@ -1,4 +1,4 @@
-"""Speech-to-text platform entity for Azure Speech integration."""
+"""Speech-to-text platform for azure_speech."""
 
 from __future__ import annotations
 

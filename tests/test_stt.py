@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.azure_speech.stt.engine import AzureSpeechSTTEntity
+from custom_components.azure_speech.stt import AzureSpeechSTTEntity
 from homeassistant.components.stt import (
     AudioBitRates,
     AudioChannels,

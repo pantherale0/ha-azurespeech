@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.azure_speech.tts.engine import AzureSpeechTTSEntity
+from custom_components.azure_speech.tts import AzureSpeechTTSEntity
 from homeassistant.core import HomeAssistant
 
 
