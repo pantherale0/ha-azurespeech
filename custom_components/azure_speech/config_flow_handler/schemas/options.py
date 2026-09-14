@@ -10,12 +10,16 @@ from custom_components.azure_speech.const import (
     CONF_PITCH,
     CONF_PROFANITY_MODE,
     CONF_RATE,
+    CONF_STYLE,
+    CONF_STYLE_DEGREE,
     CONF_VOICE,
     DEFAULT_AUDIO_FORMAT,
     DEFAULT_LANGUAGE,
     DEFAULT_PITCH,
     DEFAULT_PROFANITY_MODE,
     DEFAULT_RATE,
+    DEFAULT_STYLE,
+    DEFAULT_STYLE_DEGREE,
     DEFAULT_VOICE,
 )
 from homeassistant.helpers.selector import (
@@ -34,13 +38,41 @@ def get_options_schema(
 ) -> vol.Schema:
     """Build the options schema with dynamic voices dropdown."""
     voice_options: list[SelectOptionDict] = []
+    discovered_styles: set[str] = set()
+
     if voices_list:
         for v in voices_list:
             short_name = v.get("ShortName", "")
             display_name = f"{short_name} ({v.get('Gender', '')}, {v.get('Locale', '')})"
             voice_options.append(SelectOptionDict(value=short_name, label=display_name))
 
+            style_list = v.get("StyleList", [])
+            if isinstance(style_list, list):
+                discovered_styles.update(
+                    style.strip()
+                    for style in style_list
+                    if isinstance(style, str) and style.strip()
+                )
+
     selected_voice = current_options.get(CONF_VOICE, DEFAULT_VOICE)
+    selected_style = current_options.get(CONF_STYLE, DEFAULT_STYLE)
+
+    style_options = [
+        SelectOptionDict(
+            value=DEFAULT_STYLE,
+            label="default",
+        )
+    ]
+    style_options.extend(
+        SelectOptionDict(
+            value=style_name,
+            label=style_name,
+        )
+        for style_name in sorted(discovered_styles)
+    )
+
+    if selected_style and selected_style not in {option["value"] for option in style_options}:
+        style_options.append(SelectOptionDict(value=selected_style, label=selected_style))
 
     return vol.Schema(
         {
@@ -57,6 +89,20 @@ def get_options_schema(
             vol.Optional(
                 CONF_LANGUAGE,
                 default=current_options.get(CONF_LANGUAGE, DEFAULT_LANGUAGE),
+            ): TextSelector(TextSelectorConfig()),
+            vol.Optional(
+                CONF_STYLE,
+                default=selected_style,
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=style_options,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    custom_value=True,
+                )
+            ),
+            vol.Optional(
+                CONF_STYLE_DEGREE,
+                default=current_options.get(CONF_STYLE_DEGREE, DEFAULT_STYLE_DEGREE),
             ): TextSelector(TextSelectorConfig()),
             vol.Optional(
                 CONF_PITCH,
