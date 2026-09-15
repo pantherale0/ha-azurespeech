@@ -43,7 +43,7 @@
     "step": {
       "init": {
         "title": "Azure Speech Settings",
-        "description": "Configure TTS defaults: voice, language, style, pitch, rate, audio format, and profanity mode.",
+        "description": "Configure TTS defaults: voice, language, style, pitch, rate, volume, format, and profanity mode.",
         "data": {
           "voice": "Default Voice",
           "language": "Default Language",
@@ -51,6 +51,7 @@
           "style_degree": "Style Intensity (0.01-2)",
           "pitch": "Speaking Pitch",
           "rate": "Speaking Rate",
+          "volume": "Speaking Volume (default sends no volume)",
           "audio_format": "Audio Format",
           "profanity_mode": "Profanity Filter Mode"
         }
