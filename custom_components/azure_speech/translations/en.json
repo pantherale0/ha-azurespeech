@@ -51,7 +51,7 @@
           "style_degree": "Style Intensity (0.01-2)",
           "pitch": "Speaking Pitch",
           "rate": "Speaking Rate",
-          "volume": "Speaking Volume (default sends no volume)",
+          "volume": "Speaking Volume (0-100, +/-, +/-%, or silent/x-soft/soft/medium/loud/x-loud)",
           "audio_format": "Audio Format",
           "profanity_mode": "Profanity Filter Mode"
         }
