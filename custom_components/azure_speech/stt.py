@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterable
+from typing import Any
 
-from custom_components.azure_speech.api import AzureSpeechApiClientError
+from custom_components.azure_speech.api import (
+    AzureSpeechApiClientCommunicationError,
+    AzureSpeechApiClientError,
+)
 from custom_components.azure_speech.const import (
     CONF_LANGUAGE,
     CONF_PROFANITY_MODE,
     DEFAULT_LANGUAGE,
     DEFAULT_PROFANITY_MODE,
+    LOGGER,
 )
 from custom_components.azure_speech.data import AzureSpeechConfigEntry
 from custom_components.azure_speech.entity import AzureSpeechEntity
@@ -119,23 +125,39 @@ class AzureSpeechSTTEntity(SpeechToTextEntity, AzureSpeechEntity):
         language = metadata.language or self._entry.options.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
         profanity_mode = self._entry.options.get(CONF_PROFANITY_MODE, DEFAULT_PROFANITY_MODE)
 
-        try:
-            res = await self.coordinator.client.transcribe_stt_audio(
-                wav_audio_bytes=wav_payload,
-                language=language,
-                profanity_mode=profanity_mode,
-            )
-            status = res.get("RecognitionStatus")
-            display_text = res.get("DisplayText", "")
+        res: dict[str, Any] | None = None
+        for attempt in range(2):
+            try:
+                res = await self.coordinator.client.transcribe_stt_audio(
+                    wav_audio_bytes=wav_payload,
+                    language=language,
+                    profanity_mode=profanity_mode,
+                )
+                break
+            except (AzureSpeechApiClientCommunicationError, TimeoutError) as err:
+                if attempt == 0:
+                    LOGGER.debug("Transient STT error, retrying once: %s", err)
+                    await asyncio.sleep(0.5)
+                    continue
 
-            if status == "Success":
-                return SpeechResult(text=display_text, result=SpeechResultState.SUCCESS)
-            if status in ("NoMatch", "InitialSilenceTimeout"):
-                return SpeechResult(text="", result=SpeechResultState.SUCCESS)
+                LOGGER.warning("STT failed after retry: %s", err)
+                return SpeechResult(text="", result=SpeechResultState.ERROR)
+            except AzureSpeechApiClientError as err:
+                LOGGER.warning("STT failed: %s", err)
+                return SpeechResult(text="", result=SpeechResultState.ERROR)
 
+        if res is None:
             return SpeechResult(text="", result=SpeechResultState.ERROR)
-        except AzureSpeechApiClientError, TimeoutError:
-            return SpeechResult(text="", result=SpeechResultState.ERROR)
+
+        status = res.get("RecognitionStatus")
+        display_text = res.get("DisplayText", "")
+
+        if status == "Success":
+            return SpeechResult(text=display_text, result=SpeechResultState.SUCCESS)
+        if status in ("NoMatch", "InitialSilenceTimeout"):
+            return SpeechResult(text="", result=SpeechResultState.SUCCESS)
+
+        return SpeechResult(text="", result=SpeechResultState.ERROR)
 
 
 async def async_setup_entry(
